@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/use-local-storage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CREATURE_TYPES, getRandomCreatureType, CreatureGraphic } from '../components/Creatures';
-import { Sparkles, Check, Plus } from 'lucide-react';
+import { Sparkles, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -189,12 +189,22 @@ export default function Home() {
                   </div>
 
                   {/* Complete Button (Hover) */}
-                  {!goal.completed && (
+                  {!goal.completed ? (
                     <button 
                       onClick={() => toggleGoal(goal.id)}
+                      data-testid={`button-complete-${goal.id}`}
                       className="absolute -right-4 -top-4 w-10 h-10 bg-white rounded-full shadow-lg border-2 border-[#81c784] text-[#4caf50] flex items-center justify-center opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 transition-all hover:bg-[#e8f5e9] cursor-pointer"
                     >
                       <Check className="w-5 h-5 stroke-[3]" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggleGoal(goal.id)}
+                      data-testid={`button-undo-${goal.id}`}
+                      title="Mark as not done"
+                      className="absolute -right-4 -top-4 w-10 h-10 bg-white rounded-full shadow-lg border-2 border-rose-300 text-rose-400 flex items-center justify-center opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 transition-all hover:bg-rose-50 cursor-pointer"
+                    >
+                      <X className="w-5 h-5 stroke-[3]" />
                     </button>
                   )}
                 </div>

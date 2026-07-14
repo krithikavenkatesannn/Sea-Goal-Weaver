@@ -1,5 +1,5 @@
 [build]
-  command = "npm install -g pnpm && pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify"
+  command = "pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify"
   publish = "artifacts/ocean-goals/dist/public"
 
 [[redirects]]

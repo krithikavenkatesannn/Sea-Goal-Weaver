@@ -1,36 +1,44 @@
-# [Project name]
+# Ocean Goals
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A goal/dream-tracking web app ("Sea Goal Weaver") with an ocean theme — users add goals and track progress toward achieving them.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- Workflows (already configured, start automatically):
+  - `artifacts/ocean-goals: web` — frontend (React + Vite), served at `/`
+  - `artifacts/api-server: API Server` — backend (Express), served at `/api`
+  - `artifacts/mockup-sandbox: Component Preview Server` — canvas design sandbox, served at `/__mockup`
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Postgres connection string (already provisioned)
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
+- pnpm workspaces, Node.js 20, TypeScript 5.9
+- Frontend: React + Vite, Tailwind, shadcn/ui, wouter
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- DB: PostgreSQL + Drizzle ORM (schema currently empty — no tables defined yet)
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- Frontend app: `artifacts/ocean-goals/src` (currently a single Home page with a goal-input UI; no backend wiring yet)
+- Backend routes: `artifacts/api-server/src/routes` (only `/api/healthz` exists so far)
+- DB schema: `lib/db/src/schema` (empty — no tables defined)
+- OpenAPI contract: `lib/api-spec/openapi.yaml` (only health check defined)
+- Netlify-specific build files (`netlify.toml`, `vite.netlify.config.ts`, `build:netlify` script) were kept in `artifacts/ocean-goals/` from the original import but are unused on Replit.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- This project was imported from GitHub already shaped as a pnpm artifacts workspace (matching Replit's multi-artifact template), but its artifacts weren't registered with Replit's workflow/proxy system on import. Registered them by scaffolding fresh artifacts via `createArtifact` (for `ocean-goals`) and directly configuring workflows with the ports/env declared in the pre-existing `.replit-artifact/artifact.toml` files (for `api-server` and `mockup-sandbox`, which have no `createArtifact` artifact type), then restoring the original source files on top.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Single-page app where users can add "dream/goal" entries via a text input and "release" them; an ocean-themed visual tracks progress ("X of Y goals achieved"). Goal data isn't yet persisted to the backend/DB — it's UI-only so far.
 
 ## User preferences
 
@@ -38,7 +46,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The API server and mockup sandbox don't use `createArtifact`'s standard artifact types — they were wired up via `configureWorkflow` directly with the `PORT`/`BASE_PATH` values from their `.replit-artifact/artifact.toml` files.
 
 ## Pointers
 

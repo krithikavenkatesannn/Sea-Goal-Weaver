@@ -1,0 +1,101 @@
+The Netlify deploy errored, with the following guidance provided:
+
+Diagnosis
+- Relevant log lines: the build runs the command defined in netlify.toml ([line 67](#L67), [line 85](#L85)) and fails when trying to install pnpm globally: [lines 69–74](#L69-L74) show npm error EEXIST (file already exists). The overall command fails: [line 81](#L81).
+- Error type and cause: npm EEXIST when running `npm install -g pnpm` — a global pnpm executable already exists in the build environment at bin/pnpm, so npm refuses to write a file that already exists. Netlify’s image already provides pnpm (or a leftover symlink exists), so attempting to install it globally causes the failure.
+
+Solution
+1. Preferred fix — stop reinstalling pnpm in the build:
+   - Edit netlify.toml in the repo (file: netlify.toml) — remove the `npm install -g pnpm &&` prefix from the build command and let the environment’s pnpm be used. For example change the build.command to:
+```toml
+[build]
+  command = "pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify"
+  publish = "artifacts/ocean-goals/dist/public"
+```
+   - Commit and push the change. Netlify will then use the already-installed pnpm and the EEXIST error will be avoided.
+
+   Link to the file in your repo: https://github.com/krithikavenkatesannn/Sea-Goal-Weaver/blob/main/netlify.toml
+
+2. Alternative quick fixes (less recommended):
+   - Overwrite the existing pnpm by forcing the install (not recommended):
+```bash
+npm install -g pnpm --force && pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify
+```
+   - Or ignore install failure so the rest of the command still runs:
+```bash
+npm install -g pnpm || true && pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify
+```
+   These can be applied by updating build.command in netlify.toml, but they mask the underlying issue and are not ideal.
+
+Why the preferred fix is better
+- Netlify’s build image typically already provides pnpm (or Corepack can provide it). Reinstalling global CLIs can conflict with the environment and is unnecessary. Removing the redundant installation step is the cleanest solution.
+
+If you want to explicitly manage pnpm versions via Corepack instead, you can run (optional):
+```bash
+corepack enable
+corepack prepare pnpm@<version> --activate
+pnpm install
+...
+```
+No Node version change is required here.
+
+The relevant error logs are:
+
+Line 0: build-image version: 969defd95f3977f8de9cb1f48802a7e6f3d8c0b3 (noble-new-builds)
+Line 1: buildbot version: f4ff6d832f01191c180dbc9ecbedf7618210816d
+Line 2: Fetching cached dependencies
+Line 3: Failed to fetch cache, continuing with build
+Line 4: Starting to prepare the repo for build
+Line 5: No cached dependencies found. Cloning fresh repo
+Line 6: git clone --filter=blob:none https://github.com/krithikavenkatesannn/Sea-Goal-Weaver
+Line 7: Preparing Git Reference refs/heads/main
+Line 8: Installing dependencies
+Line 9: mise ~/.config/mise/config.toml tools: python@3.14.3
+Line 10: mise ~/.config/mise/config.toml tools: ruby@3.4.8
+Line 11: mise ~/.config/mise/config.toml tools: go@1.26.2
+Line 12: v24.18.0 is already installed.
+Line 13: Now using node v24.18.0 (npm v11.16.0)
+Line 58: ❯ Config file
+Line 59:   /opt/build/repo/netlify.toml
+Line 60: ​
+Line 61: ❯ Context
+Line 62:   production
+Line 63: ​
+Line 64: build.command from netlify.toml                               
+Line 65: ────────────────────────────────────────────────────────────────
+Line 66: ​
+Line 67: $ npm install -g pnpm && pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify
+Line 68: Failed during stage 'building site': Build script returned non-zero exit code: 2
+Line 69: npm error code EEXIST
+Line 70: npm error path /opt/buildhome/.nvm/versions/node/v24.18.0/bin/pnpm
+Line 71: npm error EEXIST: file already exists
+Line 72: npm error File exists: /opt/buildhome/.nvm/versions/node/v24.18.0/bin/pnpm
+Line 73: npm error Remove the existing file and try again, or run npm
+Line 74: npm error with --force to overwrite files recklessly.
+Line 75: npm error A complete log of this run can be found in: /opt/buildhome/.npm/_logs/2026-07-14T08_47_39_562Z-debug-0.log
+Line 76: ​
+Line 77: "build.command" failed                                        
+Line 78: ────────────────────────────────────────────────────────────────
+Line 79: ​
+Line 80:   Error message
+Line 81:   Command failed with exit code 1: npm install -g pnpm && pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify
+Line 82: ​
+Line 83:   Error location
+Line 84:   In build.command from netlify.toml:
+Line 85:   npm install -g pnpm && pnpm install && pnpm --filter @workspace/ocean-goals run build:netlify
+Line 86: ​
+Line 87:   Resolved config
+Line 88:   build:
+Line 89:     command: npm install -g pnpm && pnpm install && pnpm --filter
+Line 90:       @workspace/ocean-goals run build:netlify
+Line 91:     commandOrigin: config
+Line 92:     publish: /opt/build/repo/artifacts/ocean-goals/dist/public
+Line 93:     publishOrigin: config
+Line 94:   redirects:
+Line 95:     - from: /*
+Line 96:       status: 200
+Line 97:       to: /index.html
+Line 98:   redirectsOrigin: config
+Line 99: Build failed due to a user error: Build script returned non-zero exit code: 2
+Line 100: Failing build: Failed to build site
+Line 101: Finished processing build request in 13.231s
